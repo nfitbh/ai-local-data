@@ -10,6 +10,8 @@ from langchain_community.document_loaders import UnstructuredFileLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import JSONLoader
+from langchain_community.document_loaders.csv_loader import CSVLoader
+from langchain_community.document_loaders.tsv import UnstructuredTSVLoader
 
 
 class AiData:
@@ -56,7 +58,15 @@ class AiData:
         for file in glob.glob(self.dataLocation+"/*.json"):
             print("Loading file %s", file)
             documents.extend(self.getDocuments(JSONLoader(file_path=file, jq_schema='.', text_content=False).load()))
-
+        for file in glob.glob(self.dataLocation+"/*.csv"):
+            print("Loading file: ", file)
+            documents.extend(self.getDocuments(CSVLoader(file_path=file).load()))
+        for file in glob.glob(self.dataLocation+"/*.tsv"):
+            print("Loading file: ", file)
+            docs = UnstructuredTSVLoader(file_path=file, mode="elements").load()
+            print(docs[1].metadata["text_as_html"])
+            documents.extend(self.getDocuments(docs))
+            
         #create the index - here be data
         self.index = FAISS.from_documents(documents, self.embeddings)
 
